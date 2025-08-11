@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Article Evaluator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .prose-lg {
+            max-width: 80ch;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div class="container mx-auto px-4 py-8 md:py-12">
+        <!-- Header Section -->
+        <header class="text-center mb-8 md:mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-900">Article Feedback Tool</h1>
+            <p class="mt-3 text-lg text-gray-600 max-w-2xl mx-auto">Paste your article below to receive an instant evaluation and suggestions for improvement.</p>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="max-w-4xl mx-auto">
+            <!-- Article Input Section -->
+            <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                <h2 class="text-2xl font-semibold mb-4 text-gray-800">Your Article</h2>
+                <textarea id="articleInput" class="w-full h-64 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200" placeholder="Paste your article here..."></textarea>
+                <div class="flex justify-between items-center mt-4">
+                    <button id="evaluateBtn" class="bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-200 disabled:bg-gray-400">
+                        Get Feedback
+                    </button>
+                    <div id="wordCount" class="text-sm font-medium text-gray-500">0 / 500 words</div>
+                </div>
+                 <p id="error-message" class="text-red-500 text-sm mt-2 hidden"></p>
+            </div>
+
+            <!-- Evaluation Output Section -->
+            <div id="evaluationOutput" class="mt-10 hidden">
+                <h2 class="text-3xl font-bold text-center mb-8 text-gray-900">Evaluation Results</h2>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <!-- Score Column -->
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 text-center">
+                        <h3 class="text-xl font-semibold mb-3 text-gray-800">Overall Score</h3>
+                        <div id="score" class="text-5xl font-bold text-blue-600">--</div>
+                    </div>
+                    <!-- Review Comments Column -->
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 md:col-span-2">
+                        <h3 class="text-xl font-semibold mb-3 text-gray-800">Review Comments</h3>
+                        <p id="reviewComments" class="text-gray-700 leading-relaxed">Your feedback will appear here.</p>
+                    </div>
+                    <!-- Improvement Tips Column -->
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 md:col-span-3">
+                        <h3 class="text-xl font-semibold mb-3 text-gray-800">Helpful Tips</h3>
+                        <ul id="helpfulTips" class="list-disc list-inside text-gray-700 space-y-2">
+                            <li>Tips for improving your writing will be listed here.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const articleInput = document.getElementById('articleInput');
+        const wordCount = document.getElementById('wordCount');
+        const evaluateBtn = document.getElementById('evaluateBtn');
+        const evaluationOutput = document.getElementById('evaluationOutput');
+        const scoreEl = document.getElementById('score');
+        const reviewCommentsEl = document.getElementById('reviewComments');
+        const helpfulTipsEl = document.getElementById('helpfulTips');
+        const errorMessage = document.getElementById('error-message');
+        const WORD_LIMIT = 500;
+
+        // --- Event Listeners ---
+
+        // Update word count and validate input length on input
+        articleInput.addEventListener('input', () => {
+            const text = articleInput.value.trim();
+            const words = text.split(/\s+/).filter(word => word.length > 0);
+            const currentWordCount = words.length;
+
+            wordCount.textContent = `${currentWordCount} / ${WORD_LIMIT} words`;
+
+            if (currentWordCount > WORD_LIMIT) {
+                wordCount.classList.add('text-red-500');
+                wordCount.classList.remove('text-gray-500');
+                errorMessage.textContent = `You have exceeded the ${WORD_LIMIT} word limit.`;
+                errorMessage.classList.remove('hidden');
+                evaluateBtn.disabled = true;
+            } else {
+                wordCount.classList.remove('text-red-500');
+                wordCount.classList.add('text-gray-500');
+                errorMessage.classList.add('hidden');
+                evaluateBtn.disabled = currentWordCount === 0;
+            }
+        });
+
+        // Handle the evaluation process on button click
+        evaluateBtn.addEventListener('click', () => {
+            const articleText = articleInput.value.trim();
+            if (articleText) {
+                // Simulate an API call or complex processing
+                evaluateBtn.textContent = 'Evaluating...';
+                evaluateBtn.disabled = true;
+
+                setTimeout(() => {
+                    const evaluation = generateMockEvaluation(articleText);
+                    displayEvaluation(evaluation);
+                    
+                    evaluateBtn.textContent = 'Get Feedback';
+                    // The button remains disabled until the text is changed.
+                    // To re-enable, you could add: evaluateBtn.disabled = false;
+                }, 1500); // Simulate network delay
+            }
+        });
+
+        // --- Core Functions ---
+
+        /**
+         * Simulates an AI evaluation of the provided article text.
+         * @param {string} text - The article text to evaluate.
+         * @returns {object} An object containing the score, comments, and tips.
+         */
+        function generateMockEvaluation(text) {
+            const wordCount = text.split(/\s+/).filter(Boolean).length;
+            
+            // Generate a score based on text length and some randomness
+            let calculatedScore = Math.floor(60 + (wordCount / WORD_LIMIT) * 30 + Math.random() * 10);
+            if (calculatedScore > 99) calculatedScore = 99;
+
+            // Generate mock comments and tips
+            const comments = "This is a solid draft. The main ideas are clear, but the structure could be strengthened. Consider improving the introduction to better hook the reader and refining your conclusion to summarize the key takeaways more effectively.";
+            
+            const tips = [
+                "Strengthen your opening sentence to grab the reader's attention immediately.",
+                "Ensure each paragraph focuses on a single, clear idea.",
+                "Use transition words (e.g., 'however,' 'therefore,' 'in addition') to improve flow between paragraphs.",
+                "Vary your sentence structure to make the text more engaging.",
+                "Proofread carefully for any spelling or grammar errors. A second pair of eyes can be helpful!"
+            ];
+
+            return {
+                score: calculatedScore,
+                reviewComments: comments,
+                helpfulTips: tips
+            };
+        }
+
+        /**
+         * Displays the evaluation results on the page.
+         * @param {object} evaluation - The evaluation data.
+         */
+        function displayEvaluation(evaluation) {
+            scoreEl.textContent = evaluation.score;
+            reviewCommentsEl.textContent = evaluation.reviewComments;
+            
+            // Clear previous tips and populate new ones
+            helpfulTipsEl.innerHTML = '';
+            evaluation.helpfulTips.forEach(tip => {
+                const li = document.createElement('li');
+                li.textContent = tip;
+                helpfulTipsEl.appendChild(li);
+            });
+
+            // Show the evaluation section with a smooth transition
+            evaluationOutput.classList.remove('hidden');
+            evaluationOutput.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    </script>
+</body>
+</html>
